@@ -1,12 +1,43 @@
 import string, re, itertools
 import timed_call
 
+import re
+
+def compile_word(word):
+    """Compile a word of uppercase letters as numeric digits.
+    E.g., compile_word('YOU') => '(1*U+10*O+100*Y)'
+    Non-uppercase words unchanged: compile_word('+') => '+'"""
+
+    """ 
+    if word:
+        match = re.match(r'[A-Z]*',word)
+        if match and len(match.group())==len(word):
+            multiplier = "1"
+            result = "("
+            for i in range(len(word),0,-1):
+                result = result + multiplier + "*" + word[i-1]
+                if i > 1:
+                    result = result + "+"
+                    multiplier = multiplier + "0"
+
+            result = result + ")"
+            
+            return result
+
+    return word
+    """
+    if word.isupper():
+        terms = [ ('%s*%s' % (10**i,ch)  ) for i,ch in enumerate(word[::-1]) ]
+        return "(" + '+'.join(terms) + ")"
+    else:
+        return word
+
 def fill_in(formula):
     "Generate all possible fillings-in of letters in formula with digits."
-    letters = ''.join(re.findall(r'[A-Z]',formula)) #should be a string
+    letters = ''.join(set(re.findall(r'[A-Z]',formula)))
     for digits in itertools.permutations('1234567890', len(letters)):
         table = str.maketrans(letters, ''.join(digits))
-        yield formula.translate(table)
+        yield str.translate(formula,table)
 
 def valid(f):
     "Formula f is valid iff it has no numbers with leading zero and evals true."
@@ -21,11 +52,66 @@ def solve(formula):
     for f in fill_in(formula):
         if valid(f):
             return f
-    
-print(valid("2 + 202 == 204"))
-print(valid("02 + 2 == 4"))
-print(valid("2 + 02 == 4"))
-print(valid("2 + 2 == 04"))
-print(valid("2 / 0 == 4"))
 
-print(solve('ODD + ODD == EVEN'))
+def compile_formula(formula):
+    """compile formula into a function. Also, return letters found in formula as a str
+    in the same order as params of the function"""
+    letters = ''.join(set(re.findall(r'[A-Z]',formula)))
+    params = ' , '.join(letters)
+    body = ''.join(map(compile_word,re.split(r'([A-Z]+)',formula)))
+    func = "lambda %s : %s" % (params,body)
+    return eval(func),letters
+
+def compile_formula_v2(formula,verbose=False):
+    """compile formula into a function. Also, return letters found in formula as a str
+    in the same order as params of the function"""
+    letters = ''.join(set(re.findall(r'[A-Z]',formula)))
+    params = ' , '.join(letters)
+    body = ''.join(map(compile_word,re.split(r'([A-Z]+)',formula)))
+    leading_letters = set(re.findall(r'([A-Z])[A-Z]*',formula))
+    if leading_letters:
+        leading_zero_check = ' and '.join(e+'!=0' for e in leading_letters)
+        body = "%s and (%s)" % (leading_zero_check,body) 
+    func = "lambda %s : (%s)" % (params,body)
+    if verbose: print(func)
+    return eval(func),letters
+
+def solve_v2(formula):
+    "faster version of 'solve', avoids repeated calls to eval"
+
+    eval_func,letters = compile_formula_v2(formula,True)
+
+    for digits in itertools.permutations(range(0,10),len(letters)):
+        try:
+            if eval_func(*digits):
+                table = str.maketrans(letters,''.join(map(str,digits)))
+                return str.translate(formula,table)
+        except ArithmeticError:
+            return None
+
+def test():
+    assert(valid("2 + 202 == 204") == True)
+    assert(valid("02 + 2 == 4") == False)
+    assert(valid("2 + 02 == 4") == False)
+    assert(valid("2 + 2 == 04") == False)
+    assert(valid("2 / 0 == 4") == False)
+
+    print(solve('ODD + ODD == EVEN'))
+
+    print(compile_word("YOU"))
+
+    print(compile_formula("ODD + ODD == EVEN"))
+    print(compile_formula("YOU == ME**2"))
+
+    print(solve_v2("ODD + ODD == EVEN"))
+    print(solve_v2("YOU == ME**2"))
+    print(solve_v2("A + B == BA"))
+    print(solve_v2("X / X == X"))
+
+    print(solve_v2("1 + 1 == 2"))
+
+    print("all test cases passed!")
+
+    return
+
+test()
