@@ -1,5 +1,4 @@
 import string, re, itertools
-import timed_call
 
 import re
 
@@ -27,7 +26,7 @@ def compile_word(word):
     return word
     """
     if word.isupper():
-        terms = [ ('%s*%s' % (10**i,ch)  ) for i,ch in enumerate(word[::-1]) ]
+        terms = [ ('%s*%s' % (10**i,ch)) for i,ch in enumerate(word[::-1]) ]
         return "(" + '+'.join(terms) + ")"
     else:
         return word
@@ -79,7 +78,7 @@ def compile_formula_v2(formula,verbose=False):
 def solve_v2(formula):
     "faster version of 'solve', avoids repeated calls to eval"
 
-    eval_func,letters = compile_formula_v2(formula,True)
+    eval_func,letters = compile_formula_v2(formula,False)
 
     for digits in itertools.permutations(range(0,10),len(letters)):
         try:

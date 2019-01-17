@@ -17,11 +17,12 @@ def countcalls(f):
     count_calls[f] = 0
     return _f
 
+@decorator
 def memoize(f):
     print("memoize")
     cache = {}
     def _f(*args):
-        #nonlocal cache
+        nonlocal cache
         try:
             return cache[args]
         except KeyError:
@@ -37,7 +38,7 @@ def trace(f):
     indent = '   '
     level = 0
     def _f(*args):
-        #nonlocal level
+        nonlocal level
         signature = '%s(%s)' % (f.__name__, ', '.join(map(repr, args)))
         print('%s--> %s' % (level*indent, signature))
         level += 1
@@ -53,14 +54,12 @@ def trace(f):
 def disabled(func): return func
 trace = disabled
 """
-
+@trace
 @memoize
 def fib(n):
-    print("fib")
     if n == 0 or n == 1:
         return 1
     else:
         return fib(n-1) + fib(n-2)
 
-fib(0)
-fib(1)
+fib(6)
