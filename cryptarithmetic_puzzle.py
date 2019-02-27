@@ -7,24 +7,6 @@ def compile_word(word):
     E.g., compile_word('YOU') => '(1*U+10*O+100*Y)'
     Non-uppercase words unchanged: compile_word('+') => '+'"""
 
-    """ 
-    if word:
-        match = re.match(r'[A-Z]*',word)
-        if match and len(match.group())==len(word):
-            multiplier = "1"
-            result = "("
-            for i in range(len(word),0,-1):
-                result = result + multiplier + "*" + word[i-1]
-                if i > 1:
-                    result = result + "+"
-                    multiplier = multiplier + "0"
-
-            result = result + ")"
-            
-            return result
-
-    return word
-    """
     if word.isupper():
         terms = [ ('%s*%s' % (10**i,ch)) for i,ch in enumerate(word[::-1]) ]
         return "(" + '+'.join(terms) + ")"
